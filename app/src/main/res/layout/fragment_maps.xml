@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
     android:orientation="horizontal"
-    tools:context=".MapsActivity">
+    tools:context=".ui.maps.MapsFragment">
 
     <fragment
         android:id="@+id/map"
