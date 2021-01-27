@@ -28,6 +28,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private val TAG = MapsActivity::class.java.simpleName
 
     private lateinit var mMap: GoogleMap
+    private lateinit var tracker: Tracker
 
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var mSettingsClient: SettingsClient
@@ -37,9 +38,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private var mCurrentLocation: Location? = null
 
     private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
-
     private val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
-
     private val REQUEST_CHECK_SETTINGS = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +51,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        tracker = Tracker(this)
         init()
     }
 
@@ -71,6 +71,8 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+
+        Log.e(this.TAG, "onMayReady")
     }
 
     private fun init() {
@@ -80,8 +82,9 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         mLocationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
+                Log.e(TAG, "Set Current Location")
                 // location is received
-                mCurrentLocation = locationResult.getLastLocation()
+                mCurrentLocation = locationResult.lastLocation
                 //mLastUpdateTime = DateFormat.getTimeInstance().format(Date())
                 updateLocationUI()
             }
@@ -149,19 +152,18 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
     private fun updateLocationUI() {
         if (mCurrentLocation != null) {
             // location last updated time
-            //txtUpdatedOn.setText("Last updated on: " + mLastUpdateTime);
-            Toast.makeText(
+            /*Toast.makeText(
                 applicationContext, "Lat: " + mCurrentLocation!!.latitude
                         + ", Lng: " + mCurrentLocation!!.longitude, Toast.LENGTH_LONG
-            ).show()
+            ).show()*/
 
-            val latlng = LatLng(mCurrentLocation!!.latitude, mCurrentLocation!!.longitude)
-            Log.e(this.TAG, latlng.latitude.toString() + "," + latlng.longitude.toShort())
-            //points.add(latlng)
+            val location = LatLng(mCurrentLocation!!.latitude, mCurrentLocation!!.longitude)
+            Log.e(this.TAG, location.latitude.toString() + "," + location.longitude.toShort())
+            tracker.updateLocation(2, location.latitude, location.longitude)
 
-            mMap.addMarker(MarkerOptions().position(latlng).title("Marker in india"))
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng))
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 12.0f))
+            mMap.addMarker(MarkerOptions().position(location).title("Marker in india"))
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12.0f))
         }
     }
 }
