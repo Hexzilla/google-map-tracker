@@ -10,6 +10,14 @@
     <string name="menu_home">Home</string>
     <string name="menu_tracking">Tracking</string>
 
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_confirm_password">Confirm Password</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_sign_in">SIGNIN</string>
+    <string name="login_sign_up">SIGNUP</string>
+    <string name="login_new_user">New user? Register Now</string>
+
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_login">Login</string>
 </resources>

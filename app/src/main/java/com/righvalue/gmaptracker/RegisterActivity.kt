@@ -19,25 +19,27 @@ import org.json.JSONObject
 import java.util.regex.Pattern
 
 
-class LoginActivity : AppCompatActivity() {
+class RegisterActivity : AppCompatActivity() {
 
     private lateinit var emailEditText: EditText
     private lateinit var passEditText: EditText
+    private lateinit var passConfirmEditText: EditText
     private lateinit var loginLayout: LinearLayout
     private lateinit var progressBar: RelativeLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_register)
 
         // Address the email and password field
         emailEditText = findViewById(R.id.username)
         passEditText = findViewById(R.id.password)
+        passConfirmEditText = findViewById(R.id.confirm_password)
         loginLayout = findViewById(R.id.loginLayout)
         progressBar = findViewById(R.id.loadingPanel)
     }
 
-    fun checkLogin(v: View?) {
+    fun checkRegister(v: View?) {
         val email = emailEditText.text.toString()
         if (!isValidEmail(email)) {
             emailEditText.error = "Please input user name"
@@ -47,12 +49,21 @@ class LoginActivity : AppCompatActivity() {
         if (!isValidPassword(pass)) {
             passEditText.error = "Password must be more than 8 characters"
         }
-        if (!isValidEmail(email) || !isValidPassword(pass)) {
+
+        val passConfirm = passConfirmEditText.text.toString()
+        if (pass != passConfirm) {
+            passConfirmEditText.error = "The password confirmation does not match"
+            return
+        }
+        if (!isValidPassword(passConfirm)) {
+            passConfirmEditText.error = "Password cannot be empty or must more than 8 characters"
+        }
+        if (!isValidEmail(email) || !isValidPassword(pass) || !isValidPassword(passConfirm)) {
             return
         }
 
         showProgressbar()
-        login(email, pass)
+        register(email, pass)
     }
 
     private fun showProgressbar() {
@@ -78,26 +89,27 @@ class LoginActivity : AppCompatActivity() {
 
     // validating password
     private fun isValidPassword(pass: String?): Boolean {
-        return (pass != null && pass.length >= 4)
+        return (pass != null && pass.length >= 8)
     }
 
-    private fun login(username: String, password: String) {
-        val postUrl = "http://10.10.11.85:8000/api/login"
+    private fun register(username: String, password: String) {
+        val postUrl = "http://10.10.11.85:8000/api/register"
         val requestQueue = Volley.newRequestQueue(this)
 
         val postData = JSONObject()
         postData.put("name", username)
         postData.put("password", password)
+        postData.put("password_confirmation", password)
 
         val jsonObjectRequest = JsonObjectRequest(Request.Method.POST, postUrl, postData,
             Response.Listener<JSONObject> { response ->
-                Log.e("Tracker", response.toString())
+                hideProgressbar()
+                Log.e("DTracker", response.toString())
 
                 if (response["success"] == true) {
-                    startMapActivity()
+                    startLoginActivity()
                 }
                 else {
-                    hideProgressbar()
                     Toast.makeText(applicationContext, "Incorrect username or password!", Toast.LENGTH_SHORT).show()
                 }
             },
@@ -109,14 +121,9 @@ class LoginActivity : AppCompatActivity() {
         requestQueue.add(jsonObjectRequest)
     }
 
-    private fun startMapActivity() {
-        val intent = Intent(this, MainActivity::class.java)
+    private fun startLoginActivity() {
+        val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         this.finish()
-    }
-
-    fun register(v: View?) {
-        val intent = Intent(this, RegisterActivity::class.java)
-        startActivity(intent)
     }
 }
