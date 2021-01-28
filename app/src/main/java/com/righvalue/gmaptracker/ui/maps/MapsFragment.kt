@@ -1,11 +1,14 @@
 package com.righvalue.gmaptracker.ui.maps
 
 import android.Manifest
-import android.annotation.SuppressLint
+import android.app.ActivityManager
+import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,75 +24,59 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.righvalue.gmaptracker.*
+import com.righvalue.gmaptracker.AppConstants
 import com.righvalue.gmaptracker.R
+import java.text.DateFormat
+import java.util.*
 
 
-class MapsFragment : Fragment(), OnMapReadyCallback, OnRequestPermissionsResult {
-
-    private val TAG = MapsFragment::class.java.simpleName
+class MapsFragment : Fragment(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var tracker: Tracker
-
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
 
-    private var wayLatitude: Double = 0.0
-    private var wayLongitude: Double = 0.0
+    private lateinit var tracker: Tracker
 
     private var trackingState: Boolean = false
     private var backgroundTracking: Boolean = false
-    private val stringBuilder: StringBuilder = StringBuilder()
     private var isGPS = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val root = inflater.inflate(R.layout.fragment_maps, container, false)
         val button = root.findViewById<FloatingActionButton>(R.id.btn_start_location_updates)
-        button.setOnClickListener { startLocationButtonClick() }
-
-        val activity = requireActivity() as MainActivity
-        activity.setRequestPermissionsResult(this)
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment =
-            childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-        mapFragment?.getMapAsync(this)
+        button.setOnClickListener { startLocationTracking() }
 
         initialize()
-
         return root
     }
 
     private fun initialize() {
+        val mapFragment =
+            childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
+        mapFragment?.getMapAsync(this)
+
+        GoogleService(requireContext()).turnGPSOn { isGPSEnable -> isGPS = isGPSEnable }
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
-        locationRequest = LocationRequest.create()
+        locationRequest = LocationRequest()
+        locationRequest.interval = AppUtils.UPDATE_INTERVAL_IN_MILLISECONDS
+        locationRequest.fastestInterval = AppUtils.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 5 * 1000 // 10 seconds
-        locationRequest.fastestInterval = 5 * 1000 // 5 seconds
-
-        GpsUtils(requireContext()).turnGPSOn { isGPSEnable -> isGPS = isGPSEnable }
+        locationRequest.maxWaitTime = 15000
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
-                onUpdateLocationResult(locationResult)
+                Log.e(TAG, "onLocationResult")
+                onUpdateLocations(locationResult)
             }
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
-        Log.e(this.TAG, "onMayReady")
+        Log.e(TAG, "onMayReady")
         mMap = googleMap
 
         // Add a marker in Sydney and move the camera
@@ -98,80 +85,33 @@ class MapsFragment : Fragment(), OnMapReadyCallback, OnRequestPermissionsResult 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 
-    private fun onUpdateLocationResult(locationResult: LocationResult?) {
-        Log.e(TAG, "onUpdateLocationResult")
-        if (locationResult == null) {
-            return
-        }
-        for (location in locationResult.locations) {
-            if (location != null) {
-                updateLocation(location.latitude, location.longitude)
-            }
-        }
-    }
-
-    private fun startBackgroundTracking() {
-        if (backgroundTracking) {
-            //Creates a new handler thread
-            val locationHandler = HandlerThread("LocationHandler")
-            locationHandler.start()
-
-            //Get the looper from the handler thread
-            val handler = Handler(locationHandler.looper)
-            handler.postDelayed(Runnable {
-                //Check if the location service is running, if its not. lets start it!
-                /*if (!isMyServiceRunning(LocationService::class.java)) {
-                    getApplicationContext().startService(
-                        Intent(
-                            getApplicationContext(),
-                            LocationService::class.java
-                        )
-                    )
-                }
-
-                //Requests a new location from the location service(Feel like it could be done in a less static way)
-                LocationService.requestNewLocation()*/
-
-                Log.e(TAG, "background thread")
-                getLastLocation()
-
-                startBackgroundTracking()
-            }, 2000)
-        }
-    }
-
-    /*private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
-        val manager = context?.applicationContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                return true
-            }
-        }
-        return false
-    }*/
-
-    private fun checkPermission(permission: kotlin.String) : Boolean {
+    private fun checkPermission(permission: String) : Boolean {
         val result = ActivityCompat.checkSelfPermission(requireContext(), permission)
         return result == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun startLocationButtonClick() {
+    private fun startLocationTracking() {
+        Log.e(TAG, "startLocationTracking")
         if (!checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
             !checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            Log.e(TAG, "startLocationTracking-RequestPermissions")
             requestPermissions(
-                arrayOf<kotlin.String>(
+                arrayOf<String>(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION),
                 AppConstants.LOCATION_REQUEST)
         } else {
-            startLocationUpdates()
+            startLocationService()
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun startLocationUpdates() {
+    private fun startLocationService() {
         trackingState = true
-        mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        try {
+            mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+        } catch (ex: SecurityException) {
+            ex.printStackTrace()
+        }
     }
 
     private fun stopLocationUpdates() {
@@ -179,37 +119,14 @@ class MapsFragment : Fragment(), OnMapReadyCallback, OnRequestPermissionsResult 
         mFusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
-    @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
-        Log.e(TAG, "getLastLocation")
-        mFusedLocationClient.lastLocation.addOnSuccessListener(requireActivity()) { location ->
-            Log.e(TAG, "getLastLocation-callback: " + (location != null))
-            if (location != null) {
-                updateLocation(location.latitude, location.longitude)
-            } else {
-                mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-            }
-        }
-    }
-
-    private fun updateLocation(latitude: Double, longitude: Double) {
-        Log.e(this.TAG, "updateLocation:, $latitude, $longitude")
-        //TODO - //tracker.updateLocation(2, latitude, longitude)
-
-        /*val location = LatLng(latitude, longitude)
-        mMap.addMarker(MarkerOptions().position(location).title("Marker in india"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12.0f))*/
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out kotlin.String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         Log.e(TAG, "onRequestPermissionsResult")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             AppConstants.LOCATION_REQUEST -> {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startLocationUpdates()
+                    startLocationService()
                 } else {
                     Toast.makeText(requireContext(), "Permission denied", Toast.LENGTH_SHORT).show()
                 }
@@ -227,6 +144,19 @@ class MapsFragment : Fragment(), OnMapReadyCallback, OnRequestPermissionsResult 
         super.onPause()
         Log.e(TAG, "onPause")
         backgroundTracking = true
-        startBackgroundTracking()
+    }
+
+    private fun onUpdateLocations(result: LocationResult?) {
+        if (result != null) {
+            for (location in result.locations) {
+                if (location != null) {
+                    onLocationChanged(location)
+                }
+            }
+        }
+    }
+
+    private fun onLocationChanged(location: Location) {
+        Log.e(TAG, "onLocationChanged: ${location.latitude}, ${location.longitude}")
     }
 }

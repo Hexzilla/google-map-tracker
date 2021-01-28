@@ -28,8 +28,6 @@ class   MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
-    private var onRequestPermissionsResult: OnRequestPermissionsResult? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -80,15 +78,6 @@ class   MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
-    }
-
-    /*override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out kotlin.String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        this.onRequestPermissionsResult?.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }*/
-
-    public fun setRequestPermissionsResult(e: OnRequestPermissionsResult) {
-        this.onRequestPermissionsResult = e
     }
 
     /*private fun Activity.makeStatusBarTransparent() {

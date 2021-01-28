@@ -1,4 +1,4 @@
-package com.righvalue.gmaptracker;
+package com.righvalue.gmaptracker.ui.maps;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -18,10 +18,11 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.righvalue.gmaptracker.AppConstants;
 
 import static android.content.ContentValues.TAG;
 
-public class GpsUtils {
+public class GoogleService {
 
     private Context context;
     private SettingsClient mSettingsClient;
@@ -29,7 +30,7 @@ public class GpsUtils {
     private LocationManager locationManager;
     private LocationRequest locationRequest;
 
-    public GpsUtils(Context context) {
+    public GoogleService(Context context) {
         this.context = context;
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         mSettingsClient = LocationServices.getSettingsClient(context);
