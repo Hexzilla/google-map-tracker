@@ -1,10 +1,7 @@
-package com.righvalue.gmaptracker.ui.maps
+package com.righvalue.gmaptracker.maps
 
 import android.Manifest
-import android.app.ActivityManager
 import android.content.ContentValues.TAG
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -25,9 +22,9 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.righvalue.gmaptracker.AppConstants
+import com.righvalue.gmaptracker.Constants
 import com.righvalue.gmaptracker.R
-import java.text.DateFormat
-import java.util.*
+import com.righvalue.gmaptracker.Tracker
 
 
 class MapsFragment : Fragment(), OnMapReadyCallback {
@@ -76,7 +73,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        Log.e(TAG, "onMayReady")
+        Log.e(Constants.TAG, "onMayReady")
         mMap = googleMap
 
         // Add a marker in Sydney and move the camera
@@ -91,10 +88,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun startLocationTracking() {
-        Log.e(TAG, "startLocationTracking")
+        Log.e(Constants.TAG, "startLocationTracking")
         if (!checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
             !checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-            Log.e(TAG, "startLocationTracking-RequestPermissions")
+            Log.e(Constants.TAG, "startLocationTracking-RequestPermissions")
             requestPermissions(
                 arrayOf<String>(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -120,7 +117,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        Log.e(TAG, "onRequestPermissionsResult")
+        Log.e(Constants.TAG, "onRequestPermissionsResult")
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             AppConstants.LOCATION_REQUEST -> {
@@ -136,18 +133,18 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
-        Log.e(TAG, "onResume")
+        Log.e(Constants.TAG, "onResume")
         backgroundTracking = false
     }
 
     override fun onPause() {
         super.onPause()
-        Log.e(TAG, "onPause")
+        Log.e(Constants.TAG, "onPause")
         backgroundTracking = true
     }
 
     private fun onUpdateLocations(result: LocationResult?) {
-        Log.e(TAG, "onUpdateLocation")
+        Log.e(Constants.TAG, "onUpdateLocation")
         if (result != null) {
             for (location in result.locations) {
                 if (location != null) {
@@ -158,7 +155,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun onLocationChanged(location: Location) {
-        Log.e(TAG, "onLocationChanged: ${location.latitude}, ${location.longitude}")
+        Log.e(Constants.TAG, "onLocationChanged: ${location.latitude}, ${location.longitude}")
 
         tracker.updateLocation(2, location.latitude, location.longitude)
 

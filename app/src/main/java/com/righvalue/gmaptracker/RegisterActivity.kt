@@ -21,6 +21,7 @@ import java.util.regex.Pattern
 
 class RegisterActivity : AppCompatActivity() {
 
+    private lateinit var tracker: Tracker
     private lateinit var emailEditText: EditText
     private lateinit var passEditText: EditText
     private lateinit var passConfirmEditText: EditText
@@ -30,6 +31,8 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
+
+        tracker = Tracker(this)
 
         // Address the email and password field
         emailEditText = findViewById(R.id.username)
@@ -93,32 +96,22 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun register(username: String, password: String) {
-        val postUrl = "http://10.10.11.85:8000/api/register"
-        val requestQueue = Volley.newRequestQueue(this)
-
-        val postData = JSONObject()
-        postData.put("name", username)
-        postData.put("password", password)
-        postData.put("password_confirmation", password)
-
-        val jsonObjectRequest = JsonObjectRequest(Request.Method.POST, postUrl, postData,
-            Response.Listener<JSONObject> { response ->
-                hideProgressbar()
-                Log.e("DTracker", response.toString())
-
-                if (response["success"] == true) {
+        tracker.register(username, password) { error, response ->
+            if (error == "success") {
+                if (response != null && response["success"] == true) {
                     startLoginActivity()
                 }
                 else {
-                    Toast.makeText(applicationContext, "Incorrect username or password!", Toast.LENGTH_SHORT).show()
+                    hideProgressbar()
+                    Toast.makeText(applicationContext, "Register Error!", Toast.LENGTH_SHORT).show()
                 }
-            },
-            Response.ErrorListener { error ->
+            }
+            else {
+                Log.e("DTracker", error!!)
                 hideProgressbar()
                 Toast.makeText(applicationContext, "Network Error!", Toast.LENGTH_SHORT).show()
-            })
-
-        requestQueue.add(jsonObjectRequest)
+            }
+        }
     }
 
     private fun startLoginActivity() {

@@ -11,16 +11,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.VolleyError
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
-import org.json.JSONException
 import org.json.JSONObject
-import java.util.regex.Pattern
 
 
 class LoginActivity : AppCompatActivity() {
 
+    private lateinit var tracker: Tracker
     private lateinit var emailEditText: EditText
     private lateinit var passEditText: EditText
     private lateinit var loginLayout: LinearLayout
@@ -29,6 +27,8 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        tracker = Tracker(this)
 
         // Address the email and password field
         emailEditText = findViewById(R.id.username)
@@ -82,31 +82,21 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login(username: String, password: String) {
-        val postUrl = "http://10.10.11.85:8000/api/login"
-        val requestQueue = Volley.newRequestQueue(this)
-
-        val postData = JSONObject()
-        postData.put("name", username)
-        postData.put("password", password)
-
-        val jsonObjectRequest = JsonObjectRequest(Request.Method.POST, postUrl, postData,
-            Response.Listener<JSONObject> { response ->
-                Log.e("Tracker", response.toString())
-
-                if (response["success"] == true) {
+        tracker.login(username, password) { error, response ->
+            if (error == "success") {
+                if (response != null && response["success"] == true) {
                     startMapActivity()
                 }
                 else {
                     hideProgressbar()
                     Toast.makeText(applicationContext, "Incorrect username or password!", Toast.LENGTH_SHORT).show()
                 }
-            },
-            Response.ErrorListener { error ->
+            }
+            else {
                 hideProgressbar()
                 Toast.makeText(applicationContext, "Network Error!", Toast.LENGTH_SHORT).show()
-            })
-
-        requestQueue.add(jsonObjectRequest)
+            }
+        }
     }
 
     private fun startMapActivity() {

@@ -1,4 +1,4 @@
-package com.righvalue.gmaptracker.ui.home
+package com.righvalue.gmaptracker.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

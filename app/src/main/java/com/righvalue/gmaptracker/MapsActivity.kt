@@ -21,7 +21,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
-import com.righvalue.gmaptracker.ui.maps.Tracker
 
 
 class MapsActivity : FragmentActivity(), OnMapReadyCallback {
@@ -82,7 +81,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
         mLocationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
-                Log.e(TAG, "Set Current Location")
+                Log.e(Constants.TAG, "Set Current Location")
                 // location is received
                 mCurrentLocation = locationResult.lastLocation
                 //mLastUpdateTime = DateFormat.getTimeInstance().format(Date())

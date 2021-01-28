@@ -1,4 +1,4 @@
-package com.righvalue.gmaptracker.ui.maps;
+package com.righvalue.gmaptracker.maps;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -19,6 +19,7 @@ import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.righvalue.gmaptracker.AppConstants;
+import com.righvalue.gmaptracker.Constants;
 
 import static android.content.ContentValues.TAG;
 
@@ -82,13 +83,13 @@ public class GoogleService {
                                         ResolvableApiException rae = (ResolvableApiException) e;
                                         rae.startResolutionForResult((Activity) context, AppConstants.GPS_REQUEST);
                                     } catch (IntentSender.SendIntentException sie) {
-                                        Log.i(TAG, "PendingIntent unable to execute request.");
+                                        Log.i(Constants.TAG, "PendingIntent unable to execute request.");
                                     }
                                     break;
                                 case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                                     String errorMessage = "Location settings are inadequate, and cannot be " +
                                             "fixed here. Fix in Settings.";
-                                    Log.e(TAG, errorMessage);
+                                    Log.e(Constants.TAG, errorMessage);
 
                                     Toast.makeText((Activity) context, errorMessage, Toast.LENGTH_LONG).show();
                             }
