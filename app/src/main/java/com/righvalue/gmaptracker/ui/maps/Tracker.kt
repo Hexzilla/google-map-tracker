@@ -1,4 +1,4 @@
-package com.righvalue.gmaptracker
+package com.righvalue.gmaptracker.ui.maps
 
 import android.content.Context
 import android.util.Log
