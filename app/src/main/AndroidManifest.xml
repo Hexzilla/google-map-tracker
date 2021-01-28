@@ -70,10 +70,6 @@
             android:name=".ui.maps.LocationService"
             android:enabled="true"
             android:exported="true"/>
-        <service
-            android:name=".ui.maps.BackgroundLocationService"
-            android:enabled="true"
-            android:exported="true"/>
     </application>
 
 </manifest>

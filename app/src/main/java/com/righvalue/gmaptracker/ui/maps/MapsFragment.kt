@@ -48,6 +48,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         val button = root.findViewById<FloatingActionButton>(R.id.btn_start_location_updates)
         button.setOnClickListener { startLocationTracking() }
 
+        tracker = Tracker(requireContext())
         initialize()
         return root
     }
@@ -62,14 +63,13 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         locationRequest = LocationRequest()
-        locationRequest.interval = AppUtils.UPDATE_INTERVAL_IN_MILLISECONDS
-        locationRequest.fastestInterval = AppUtils.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
+        locationRequest.interval = Constants.UPDATE_INTERVAL_IN_MILLISECONDS
+        locationRequest.fastestInterval = Constants.FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.maxWaitTime = 15000
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
-                Log.e(TAG, "onLocationResult")
                 onUpdateLocations(locationResult)
             }
         }
@@ -147,6 +147,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun onUpdateLocations(result: LocationResult?) {
+        Log.e(TAG, "onUpdateLocation")
         if (result != null) {
             for (location in result.locations) {
                 if (location != null) {
@@ -158,5 +159,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
 
     private fun onLocationChanged(location: Location) {
         Log.e(TAG, "onLocationChanged: ${location.latitude}, ${location.longitude}")
+
+        tracker.updateLocation(2, location.latitude, location.longitude)
+
+        val latlng = LatLng(location.latitude, location.longitude)
+        mMap.addMarker(MarkerOptions().position(latlng).title("Marker in india"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng))
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlng, 12.0f))
     }
 }
