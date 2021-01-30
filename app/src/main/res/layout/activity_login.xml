@@ -20,7 +20,7 @@
             android:id="@+id/username"
             android:drawableLeft="@mipmap/account"
             android:hint="@string/login_username"
-            android:layout_marginTop="180dp"
+            android:layout_marginTop="@dimen/login_input_fields_margin_top"
             android:textColor="#FFF"
             android:paddingLeft="0dp"
             android:drawablePadding="5dp"

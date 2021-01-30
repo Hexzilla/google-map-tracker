@@ -88,17 +88,25 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun startLocationTracking() {
-        Log.e(Constants.TAG, "startLocationTracking")
-        if (!checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
-            !checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-            Log.e(Constants.TAG, "startLocationTracking-RequestPermissions")
-            requestPermissions(
-                arrayOf<String>(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION),
-                AppConstants.LOCATION_REQUEST)
-        } else {
-            startLocationService()
+        if (!trackingState) {
+            Log.e(Constants.TAG, "startLocationTracking")
+            if (!checkPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                !checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+            ) {
+                Log.e(Constants.TAG, "startLocationTracking-RequestPermissions")
+                requestPermissions(
+                    arrayOf<String>(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ),
+                    AppConstants.LOCATION_REQUEST
+                )
+            } else {
+                startLocationService()
+            }
+        }
+        else {
+            stopLocationUpdates()
         }
     }
 
@@ -106,6 +114,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
         trackingState = true
         try {
             mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper())
+
+            Toast.makeText(
+                requireContext(),
+                "Started location tracking!",
+                Toast.LENGTH_SHORT
+            ).show()
         } catch (ex: SecurityException) {
             ex.printStackTrace()
         }
@@ -114,6 +128,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private fun stopLocationUpdates() {
         trackingState = false
         mFusedLocationClient.removeLocationUpdates(locationCallback)
+
+        Toast.makeText(
+            requireContext(),
+            "Stopped location tracking!",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

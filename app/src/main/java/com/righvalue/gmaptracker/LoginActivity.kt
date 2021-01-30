@@ -82,7 +82,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login(username: String, password: String) {
-        tracker.login(username, password) { error, response ->
+        startMapActivity()
+        /*tracker.login(username, password) { error, response ->
             if (error == "success") {
                 if (response != null && response["success"] == true) {
                     startMapActivity()
@@ -96,7 +97,7 @@ class LoginActivity : AppCompatActivity() {
                 hideProgressbar()
                 Toast.makeText(applicationContext, "Network Error!", Toast.LENGTH_SHORT).show()
             }
-        }
+        }*/
     }
 
     private fun startMapActivity() {
